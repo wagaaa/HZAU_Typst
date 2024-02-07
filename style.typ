@@ -9,8 +9,8 @@
   align(center)[
     #text(size: 18pt, font: songti, "目录")
 
-    set par(leading: 1.24em, first-line-indent: 0pt)
-    locate(loc => {
+    #set par(leading: 1.24em, first-line-indent: 0pt)
+    #locate(loc => {
     let elements = query(heading.where(outlined: true), loc)
     for el in elements {
       // 是否有 el 位于前面，前面的目录中用拉丁数字，后面的用阿拉伯数字
@@ -51,7 +51,56 @@
   ]
 }
 
+//中文章节名称
+#let num_cn(num, standalone: false) = if num < 11 {
+  ("零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十").at(num)
+} else if num < 100 {
+  if calc.rem(num, 10) == 0 {
+    num(calc.floor(num / 10)) + "十"
+  } else if num < 20 and standalone {
+    "十" + num_cn(calc.rem(num, 10))
+  } else {
+    num_cn(calc.floor(num / 10)) + "十" + num_cn(calc.rem(num, 10))
+  }
+} else if num < 1000 {
+  let left = num_cn(calc.floor(num / 100)) + "百"
+  if calc.rem(num, 100) == 0 {
+    left
+  } else if calc.rem(num, 100) < 10 {
+    left + "零" + num_cn(calc.rem(num, 100))
+  } else {
+    left + num_cn(calc.rem(num, 100))
+  }
+} else {
+  let left = num_cn(calc.floor(num / 1000)) + "千"
+  if calc.rem(num, 1000) == 0 {
+    left
+  } else if calc.rem(num, 1000) < 10 {
+    left + "零" + num_cn(calc.rem(num, 1000))
+  } else if calc.rem(num, 1000) < 100 {
+    left + "零" + num_cn(calc.rem(num, 1000))
+  } else {
+    left + num_cn(calc.rem(num, 1000))
+  }
+}
 
+#let appendixcounter = counter("appendix")
+#let numing_cn(..nums, location: none, brackets: false) = locate(loc => {
+  let actual_loc = if location == none { loc } else { location }
+  if appendixcounter.at(actual_loc).first() < 10 {
+    if nums.pos().len() == 1 {
+      "第" + num_cn(nums.pos().first(), standalone: true) + "章"
+    } else {
+      numbering(if brackets { "(1.1)" } else { "1.1" }, ..nums)
+    }
+  } else {
+    if nums.pos().len() == 1 {
+      "附录 " + numbering("A.1", ..nums)
+    } else {
+      numbering(if brackets { "(A.1)" } else { "A.1" }, ..nums)
+    }
+  }
+})
 
 #let project(
   title: "文献标题",
@@ -72,16 +121,25 @@
   date_en: "JUNE, 2023",
   body,
 ) = {
+  //页面属性
+  set page(paper: "a4", margin: (
+    top: 2.5cm,
+    bottom: 2.5cm,
+    left: 3.2cm,
+    right: 2.5cm
+  ))
+  set heading(numbering: numing_cn)
+
   // 封面
   align(center)[
-    #image("./assets/HZAU_LOGO.png", width: 55%, height: 7%)
+    #image("./assets/HZAU_LOGO.png", width: 60%, height: 8%)
     #text(
       size: 16pt,
       font: zhongsong,
       weight: "bold"
     )[HUAZHONG AGRICULTURAL UNIVERSITY]
 
-
+    #par()[
     #text(
       size: 36pt,
       font: heiti,
@@ -93,6 +151,8 @@
       font: zhongsong,
       weight: "bold"
     )[MASTER’S DEGREE DISSERTATION]
+    ]
+
 
     #text(
       font: heiti,
@@ -110,7 +170,7 @@
       #title_en
     ]
 
-    #v(20pt)
+    #v(5pt)
 
     // Author Infos
     #let info_key(body) = {
@@ -139,6 +199,7 @@
       columns: (40%, 40%),
       align: left,
       stroke: none,
+      gutter: 0pt,
       [
         #info_key("研究生：")
         #sub_info_key("CANDIDATE: ")
@@ -168,14 +229,14 @@
       ]
     )
 
-    #v(10pt)
-    #par(
-      leading: 0em
-    )[
+    #v(8pt)
+    
     #text(
       font: songti,
       size: 16pt,
     )[
+      #set par(justify: false, leading: 0pt)
+
       中国 武汉
 
       WUHAN, CHINA
@@ -183,7 +244,7 @@
       #date_cn
 
       #date_en
-    ]]
+    ]
     #pagebreak()
 
   ]
@@ -194,7 +255,7 @@
     #text(
       font: songti,
       weight: "bold",
-      size: 20pt
+      size: 24pt
     )[
       华中农业大学硕士学位论文
       #v(40pt)
@@ -203,7 +264,7 @@
     #text(
       font: heiti,
       weight: "bold",
-      size: 16pt,
+      size: 18pt,
     )[
       #title
       
@@ -253,8 +314,60 @@
     ]
     
   ]
+  pagebreak()
 
+  //显示目录
+  cn_outline()
 
   pagebreak()
-  body
+  
+  //摘要
+  let zh_abstract_page(abstract, keywords: ()) = {
+    set heading(level: 1, numbering: none)
+    show <_zh_abstract_>: {
+      align(center)[
+        #text(font: heiti, size: 18pt, "摘　　要")
+      ]
+    }
+    [= 摘要 <_zh_abstract_>]
+
+    set text(font: songti, size: 12pt)
+
+    abstract
+    par(first-line-indent: 0em)[
+      #text(weight: "bold", font: heiti, size: 12pt)[
+        关键词：
+        #keywords.join("；")
+      ]
+    ]
+  }
+
+  let en_abstract_page(abstract, keywords: ()) = {
+    set heading(level: 1, numbering: none)
+    show <_en_abstract_>: {
+      align(center)[
+        #text(font: heiti, size: 18pt, "Abstract")
+      ]
+    }
+    [= Abstract <_en_abstract_>]
+
+    set text(font: songti, size: 12pt)
+
+    abstract
+    par(first-line-indent: 0em)[
+      #text(weight: "bold", font: heiti, size: 12pt)[
+        Key Words: 
+        #keywords.join("; ")
+      ]
+    ]
+}
+
+  counter(page).update(1)
+
+  zh_abstract_page(abstract_cn, keywords: keywords_zh)
+  pagebreak()
+  en_abstract_page(abstract_en, keywords: keywords_en)
+  pagebreak()
+
+  text(font: songti)[#body]
 }
