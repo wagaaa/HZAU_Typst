@@ -105,6 +105,8 @@
 #let project(
   title: "文献标题",
   title_en: "Title of thi Thiese",
+  degree: "硕士",
+  class: "2023",
   abstract_cn: "中文文献",
   abstract_en: "英文文献",
   keywords_zh: (),
@@ -119,6 +121,7 @@
   supervisor_en: "LI SI",
   date_cn:"二〇二三年六月",
   date_en: "JUNE, 2023",
+  sup_group:("王五","赵六","陈七","郭八"),
   body,
 ) = {
   //页面属性
@@ -128,7 +131,6 @@
     left: 3.2cm,
     right: 2.5cm
   ))
-  set heading(numbering: numing_cn)
 
   // 封面
   align(center)[
@@ -142,15 +144,24 @@
     #par()[
     #text(
       size: 36pt,
-      font: heiti,
-      weight: "bold"
-    )[硕士学位论文]
+      font: heiti
+    )[
+      #degree#[学位论文]
+    ]
 
     #text(
-      size: 24pt,
+      size: 18pt,
       font: zhongsong,
       weight: "bold"
-    )[MASTER’S DEGREE DISSERTATION]
+    )[
+      #if degree=="学士" {
+        [BACHELOR'S DEGREE DISSERTATION]
+      } else if degree=="硕士" {
+        [MASTER'S DEGREE DISSERTATION]
+      } else{
+        [DOCTOR'S GREE DISSERTATION]
+      }
+    ]
     ]
 
 
@@ -257,7 +268,7 @@
       weight: "bold",
       size: 24pt
     )[
-      华中农业大学硕士学位论文
+      #[华中农业大学]#degree#[学位论文]
       #v(40pt)
     ]
 
@@ -288,14 +299,13 @@
       [指导教师：],[#supervisor],
       [指导小组：],
       [
-        王五
+        #for c in sup_group [
+          #c
 
-        赵六
-
-        陈七
+        ]
       ])
 
-    #v(8em)
+    #v(6em)
     #table(
       columns: (55%, 45%),
       align: left,
@@ -316,14 +326,30 @@
   ]
   pagebreak()
 
+  set page(
+    footer: {
+      set align(center)
+        text(font: songti, 10pt, baseline: -3pt, 
+        counter(page).display("I"))
+    }
+  )
+  counter(page).update(1)
   //显示目录
   cn_outline()
 
   pagebreak()
+
+  set page(
+    footer: {
+      set align(center)
+        text(font: songti, 10pt, baseline: -3pt, 
+        counter(page).display("i"))
+    }
+  )
   
   //摘要
   let zh_abstract_page(abstract, keywords: ()) = {
-    set heading(level: 1, numbering: none)
+    set heading(level: 1, numbering: none,outlined: false)
     show <_zh_abstract_>: {
       align(center)[
         #text(font: heiti, size: 18pt, "摘　　要")
@@ -343,7 +369,7 @@
   }
 
   let en_abstract_page(abstract, keywords: ()) = {
-    set heading(level: 1, numbering: none)
+    set heading(level: 1, numbering: none,outlined: false)
     show <_en_abstract_>: {
       align(center)[
         #text(font: heiti, size: 18pt, "Abstract")
@@ -362,12 +388,43 @@
     ]
 }
 
+
+  //页眉
+  set page(header: locate(loc => {
+      set text(font: songti, 10pt, baseline: 8pt, spacing: 3pt)
+      set align(center)
+      if calc.even(loc.page()) { title } else {
+      [华中农业大学]+class+[届]+degree+[研究生学位（毕业）论文]
+      }
+      line(length: 100%, stroke: 0.7pt)
+  }))
+
+  //简介部分
+  //修正页码
   counter(page).update(1)
 
   zh_abstract_page(abstract_cn, keywords: keywords_zh)
+
   pagebreak()
+
   en_abstract_page(abstract_en, keywords: keywords_en)
   pagebreak()
 
-  text(font: songti)[#body]
+  //设置编号格式
+  set heading(numbering: numing_cn)
+  show heading: set text(font: heiti)
+  
+  set page(
+    footer: {
+      set align(center)
+        text(font: songti, 10pt, baseline: -3pt, 
+          counter(page).display("1")
+        )
+    }
+  )
+
+  counter(page).update(1)
+  set text(font: songti, size: 12pt)
+  body
+  
 }

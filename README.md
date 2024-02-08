@@ -11,7 +11,7 @@ Typst template for HZAU dissertation
 
 ## 待完善功能
 
-- [ ] 页眉页脚
+- [*] 页眉页脚
 - [ ] 装订页边距
 - [ ] 格式调整
 - [ ] 自动生成参考文献
