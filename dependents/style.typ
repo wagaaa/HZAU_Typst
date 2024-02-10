@@ -3,54 +3,6 @@
 #let songti = ("Times New Roman", "Songti SC", "Songti TC", "SimSun")
 #let zhongsong = ("Times New Roman","STZhongsong", "SimSun")
 
-
-// 目录
-#let cn_outline() = {
-  align(center)[
-    #text(size: 18pt, font: songti, "目录")
-
-    #set par(leading: 1.24em, first-line-indent: 0pt)
-    #locate(loc => {
-    let elements = query(heading.where(outlined: true), loc)
-    for el in elements {
-      // 是否有 el 位于前面，前面的目录中用拉丁数字，后面的用阿拉伯数字
-      let before_toc = query(heading.where(outlined: true).before(loc), loc).find((one) => {one.body == el.body}) != none
-      let page_num = if before_toc {
-        numbering("I", counter(page).at(el.location()).first())
-      } else {
-        counter(page).at(el.location()).first()
-      }
-
-      link(el.location())[#{
-        // acknoledgement has no numbering
-        let chapt_num = if el.numbering != none {
-          numbering(el.numbering, ..counter(heading).at(el.location()))
-        } else {none}
-
-        if el.level == 1 {
-          set text(weight: "black")
-          if chapt_num == none {} else {
-            chapt_num
-            "　　"
-          }
-          el.body
-        } else {
-          chapt_num
-          "　"
-          el.body
-        }
-      }]
-
-      // 填充 ......
-      box(width: 1fr, h(0.5em) + box(width: 1fr, repeat[.]) + h(0.5em))
-      [#page_num]
-      linebreak()
-    }
-    }
-    )
-  ]
-}
-
 //中文章节名称
 #let num_cn(num, standalone: false) = if num < 11 {
   ("零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十").at(num)
@@ -85,6 +37,7 @@
 }
 
 #let appendixcounter = counter("appendix")
+
 #let numing_cn(..nums, location: none, brackets: false) = locate(loc => {
   let actual_loc = if location == none { loc } else { location }
   if appendixcounter.at(actual_loc).first() < 10 {
@@ -101,6 +54,93 @@
     }
   }
 })
+
+// 目录
+
+#let partcounter = counter("part")
+
+#let cn_outline(title: "目录", depth: none, indent: false) = {
+  align(center)[
+    #heading(title, numbering: none, outlined: false)
+  ]
+  v(2em)
+  set par(leading: 1.24em, first-line-indent: 0pt)
+  set text(font: songti, size: 14pt)
+  locate(it => {
+    let elements = query(heading.where(outlined: true).after(it), it)
+
+    for el in elements {
+      // Skip list of images and list of tables
+      if partcounter.at(el.location()).first() < 20 and el.numbering == none { continue }
+
+      // Skip headings that are too deep
+      if depth != none and el.level > depth { continue }
+
+      let maybe_number = if el.numbering != none {
+        if el.numbering == numing_cn {
+          numing_cn(..counter(heading).at(el.location()), location: el.location())
+        } else {
+          numbering(el.numbering, ..counter(heading).at(el.location()))
+        }
+        h(0.5em)
+      }
+
+      let line = {
+        if indent {
+          h(1em * (el.level - 1 ))
+        }
+
+        // if el.level == 1 {
+        //   v(0.5em, weak: true)
+        // }
+
+        if maybe_number != none {
+          style(styles => {
+            box(
+              link(el.location(), if el.level == 1 {
+                strong(maybe_number)
+              } else {
+                maybe_number
+              })
+            )
+          })
+        }
+
+        link(el.location(), if el.level == 1 {
+          strong(el.body)
+        } else {
+          el.body
+        })
+
+        // Filler dots
+        if el.level == 1 {
+          box(width: 1fr, h(10pt) + box(width: 1fr, repeat[.]) + h(10pt))
+        } else {
+          box(width: 1fr, h(10pt) + box(width: 1fr, repeat[.]) + h(10pt))
+        }
+        // Page number
+        let page_number = {
+          counter(page).at(el.location()).first()
+        }
+        
+        link(el.location(), if el.level == 1 {
+          strong(str(page_number))
+        } else {
+          str(page_number)
+        })
+
+        linebreak()
+        v(-0.2em)
+      }
+      line
+    }
+  })
+}
+
+#let empty_par() = {
+  v(-1em)
+  box()
+}
 
 #let project(
   title: "文献标题",
@@ -134,7 +174,7 @@
 
   // 封面
   align(center)[
-    #image("./assets/HZAU_LOGO.png", width: 60%, height: 8%)
+    #image("/assets/HZAU_LOGO.png", width: 60%, height: 8%)
     #text(
       size: 16pt,
       font: zhongsong,
@@ -200,7 +240,7 @@
        stroke: none,
        text(
         font: songti,
-        size: 14pt,
+        size: 16pt,
         weight: "bold",
         body
       ))
@@ -208,7 +248,7 @@
 
     #table(
       columns: (40%, 40%),
-      align: left,
+      align: (left + horizon),
       stroke: none,
       gutter: 0pt,
       [
@@ -242,12 +282,11 @@
 
     #v(8pt)
     
-    #text(
+    #par(justify: false,leading: 0pt)[
+      #text(
       font: songti,
       size: 16pt,
     )[
-      #set par(justify: false, leading: 0pt)
-
       中国 武汉
 
       WUHAN, CHINA
@@ -255,9 +294,8 @@
       #date_cn
 
       #date_en
-    ]
+    ]]
     #pagebreak()
-
   ]
 
   //内封面
@@ -335,7 +373,11 @@
   )
   counter(page).update(1)
   //显示目录
-  cn_outline()
+  cn_outline(
+    title: "目录",
+    depth: 3,
+    indent: true,
+  )
 
   pagebreak()
 
@@ -399,6 +441,32 @@
       line(length: 100%, stroke: 0.7pt)
   }))
 
+
+  //设置编号格式
+  set heading(numbering: numing_cn)
+  show heading: set text(font: heiti)
+   show heading.where(level: 1): it => {
+    set text(weight: "bold", font: heiti, size: 18pt)
+    set block(spacing: 1.5em)
+    it
+  }
+  show heading.where(level: 2): it => {
+    set text(weight: "bold", font: heiti, size: 14pt)
+    set block(above: 1.5em, below: 1.5em)
+    it
+  }
+  
+  show heading: it => {
+    set text(weight: "bold", font: heiti, size: 12pt)
+    set block(above: 1.5em, below: 1.5em)
+    it
+  } + empty_par()
+
+  //设置段落格式
+  set par(justify: true, leading: 1.24em, first-line-indent: 2em)
+  show par: set block(spacing: 1.24em)
+
+  //------内容部分------
   //简介部分
   //修正页码
   counter(page).update(1)
@@ -410,10 +478,6 @@
   en_abstract_page(abstract_en, keywords: keywords_en)
   pagebreak()
 
-  //设置编号格式
-  set heading(numbering: numing_cn)
-  show heading: set text(font: heiti)
-  
   set page(
     footer: {
       set align(center)
@@ -422,6 +486,8 @@
         )
     }
   )
+
+
 
   counter(page).update(1)
   set text(font: songti, size: 12pt)
