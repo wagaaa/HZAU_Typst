@@ -1,3 +1,4 @@
+#import "@preview/indenta:0.0.3": fix-indent  //修复图表后不缩进
 
 #let heiti = ("Times New Roman", "Heiti SC", "Heiti TC", "SimHei")
 #let songti = ("Times New Roman", "Songti SC", "Songti TC", "SimSun")
@@ -122,7 +123,7 @@
         let page_number = {
           counter(page).at(el.location()).first()
         }
-        
+
         link(el.location(), if el.level == 1 {
           strong(str(page_number))
         } else {
@@ -225,7 +226,7 @@
 
     // Author Infos
     #let info_key(body) = {
-      rect(width: 100%, inset: 2pt, 
+      rect(width: 100%, inset: 2pt,
        stroke: none,
        text(
         font: songti,
@@ -236,7 +237,7 @@
     }
 
     #let sub_info_key(body) = {
-      rect(width: 100%, inset: 2pt, 
+      rect(width: 100%, inset: 2pt,
        stroke: none,
        text(
         font: songti,
@@ -281,7 +282,7 @@
     )
 
     #v(8pt)
-    
+
     #par(justify: false,leading: 0pt)[
       #text(
       font: songti,
@@ -316,12 +317,12 @@
       size: 18pt,
     )[
       #title
-      
+
       #title_en
     ]
 
     #v(30pt)
-    
+
     #set text(
         font: songti,
         size: 16pt,
@@ -360,14 +361,14 @@
 
       #date_cn
     ]
-    
+
   ]
   pagebreak()
 
   set page(
     footer: {
       set align(center)
-        text(font: songti, 10pt, baseline: -3pt, 
+        text(font: songti, 10pt, baseline: -3pt,
         counter(page).display("I"))
     }
   )
@@ -384,11 +385,11 @@
   set page(
     footer: {
       set align(center)
-        text(font: songti, 10pt, baseline: -3pt, 
+        text(font: songti, 10pt, baseline: -3pt,
         counter(page).display("i"))
     }
   )
-  
+
   //摘要
   let zh_abstract_page(abstract, keywords: ()) = {
     set heading(level: 1, numbering: none,outlined: false)
@@ -424,7 +425,7 @@
     abstract
     par(first-line-indent: 0em)[
       #text(weight: "bold", font: heiti, size: 12pt)[
-        Key Words: 
+        Key Words:
         #keywords.join("; ")
       ]
     ]
@@ -445,17 +446,22 @@
   //设置编号格式
   set heading(numbering: numing_cn)
   show heading: set text(font: heiti)
-   show heading.where(level: 1): it => {
-    set text(weight: "bold", font: heiti, size: 18pt)
+  show heading.where(level: 1): it => {
+    set text(weight: "bold", font: heiti, size: 16pt)
     set block(spacing: 1.5em)
     it
   }
   show heading.where(level: 2): it => {
+    set text(weight: "bold", font: heiti, size: 15pt)
+    set block(above: 1.5em, below: 1.5em)
+    it
+  }
+  show heading.where(level: 3): it => {
     set text(weight: "bold", font: heiti, size: 14pt)
     set block(above: 1.5em, below: 1.5em)
     it
   }
-  
+
   show heading: it => {
     set text(weight: "bold", font: heiti, size: 12pt)
     set block(above: 1.5em, below: 1.5em)
@@ -481,7 +487,7 @@
   set page(
     footer: {
       set align(center)
-        text(font: songti, 10pt, baseline: -3pt, 
+        text(font: songti, 10pt, baseline: -3pt,
           counter(page).display("1")
         )
     }
@@ -492,5 +498,5 @@
   counter(page).update(1)
   set text(font: songti, size: 12pt)
   body
-  
+
 }

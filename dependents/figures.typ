@@ -51,18 +51,19 @@
 
 #let 简单表格(表格, caption: "", cap_en: "")={
   figure(
-    figure(
-      tables(表格),
-      caption: caption,
-      gap: 1em,
-      numbering: table_num,
-      supplement: [表],
-      kind: "table",
-    ),
-  caption: cap_en,
-  supplement: [Fig.],
-  numbering: table_num,
+      figure(
+        tables(表格),
+        caption: figure.caption(position: top)[#cap_en],
+        gap: 1em,
+        numbering: table_num,
+        supplement: [表],
+        kind: "table",
+      ),
+    caption: figure.caption(position: top)[#caption],
+    supplement: [Table ],
+    numbering: table_num,
   )
+  v(1em)
 }
 
 #let 图片(图片, caption: "", cap_en: "")={
@@ -76,7 +77,8 @@
       kind: "image",
     ),
   caption: cap_en,
-  supplement: [Fig.],
+  supplement: [Fig. ],
   numbering: table_num,
   )
+  v(1em)
 }
